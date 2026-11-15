@@ -23,7 +23,7 @@ A Claude Code job-search agent: it finds openings on public job boards, scores t
 
 ## Rules
 - **Privacy:** personal details live only in `profile/` and `data/` (git-ignored). Never write them into tracked files, commits, URLs or search queries. Generic learnings about a job site go in `playbooks/`, without the user's answers.
-- **Applications:** submit only in an interactive session, only for jobs the user approved in chat during that session (one message can approve a batch). Scheduled or unattended runs only find, score and queue.
+- **Applications:** submit only in an interactive session, only for jobs the user approved in chat during that session (one message can approve a batch, including a threshold such as `/apply-batch ≥80`). Scheduled or unattended runs only find, score and queue.
 - Never enter passwords, create accounts, solve CAPTCHAs, or enter bank/ID numbers; skip and list them for the user.
 - Score fit % before submitting and log it in `data/applications.md`.
 - Messages and emails are drafted only; the user sends them.

@@ -10,7 +10,7 @@ Your personal details never enter the repo: `/setup` asks for them on first run 
              → Claude scores the top 10 with your rubric
              → queue/YYYY-MM-DD.md (numbered shortlist)
 
-/apply-batch you reply "apply 1,3,4" in chat (one approval per batch)
+/apply-batch you reply "apply 1,3,4" or type `/apply-batch ≥80` (one approval per batch)
              → Claude fills and submits only those forms
              → passwords, CAPTCHAs, sign-ins, unusual questions are skipped and listed for you
 ```
