@@ -1,0 +1,37 @@
+{
+  "_comment": "Public job-board feeds to scan. Add or remove company board tokens here. Personal filters live in profile/filters.json (created by /setup).",
+  "greenhouse": [
+    "okta",
+    "zscaler",
+    "rubrik",
+    "databricks",
+    "stripe",
+    "coinbase",
+    "mongodb",
+    "elastic",
+    "twilio",
+    "gitlab",
+    "arcesiumllc",
+    "toast",
+    "zoominfo",
+    "sumologic",
+    "yugabyte",
+    "airbnb"
+  ],
+  "lever": [
+    "palantir",
+    "spotify"
+  ],
+  "ashby": [
+    "linear",
+    "notion",
+    "ramp"
+  ],
+  "smartrecruiters": [
+    "ServiceNow",
+    "NielsenIQ",
+    "WesternDigital"
+  ],
+  "amazon": true,
+  "atlassian": true
+}

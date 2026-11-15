@@ -1,0 +1,12 @@
+# Everything personal stays local. /setup writes these; never commit them.
+profile/
+data/
+state/
+queue/
+archive/
+*.pdf
+*.docx
+.claude/settings.local.json
+.DS_Store
+.idea/
+__pycache__/

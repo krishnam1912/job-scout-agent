@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 scripts/scan.py*)",
+      "Bash(python3 scripts/check_private.py*)",
+      "Bash(python3 scripts/find_board.py*)"
+    ]
+  }
+}
