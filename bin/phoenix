@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Launcher for the Phoenix engine: runs the packaged jar (build it first with ./mvnw -q package).
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+JAR="$ROOT/target/phoenix.jar"
+if [ ! -f "$JAR" ]; then
+  echo "phoenix: $JAR not found. Build it first: ./mvnw -q package" >&2
+  exit 1
+fi
+if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+  JAVA="$JAVA_HOME/bin/java"
+else
+  JAVA="$(command -v java || true)"
+fi
+if [ -z "$JAVA" ]; then
+  echo "phoenix: Java 21 is required but 'java' was not found" >&2
+  exit 1
+fi
+exec "$JAVA" -Xmx384m -jar "$JAR" "$@"

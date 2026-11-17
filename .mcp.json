@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "phoenix": {
+      "command": "bin/phoenix",
+      "args": ["mcp"]
+    }
+  }
+}

@@ -8,6 +8,7 @@ import dev.phoenix.store.RunRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +30,7 @@ public class StatusService {
     }
 
     public StatusReport report() {
-        Instant now = clock.instant();
+        Instant now = clock.instant().truncatedTo(ChronoUnit.SECONDS);
         Optional<RunRepository.Run> lastScan = runs.latest("scan");
         return new StatusReport(now, jobs.countByState(), asks.findByStatuses(List.of(AskStatus.OPEN, AskStatus.OFFERED)),
                 jobs.findAtRisk(now, now.plus(CLOSING_HORIZON)),
