@@ -55,3 +55,12 @@ Read: seen list 155 rows, queue files 49, leads CSV 91, applications log 87 (70 
 - No browser adapters, retry runner, Gmail ingest, Telegram or daemon (later phases). `mvnw.cmd` was not tested on Windows.
 - Startup is about 2 s (Spring context); `phoenix --help` still creates the database.
 - Per-company cooldown compares titles by edit distance only.
+
+## Review fixes (Opus review, 2026-11-18)
+- **Lost-opportunity bug:** an approval that expired unused left the job in APPROVED forever: out of the queue, impossible to start, impossible to re-approve. Added `APPROVED → QUEUED` and `ApprovalExpiry`, which runs before every queue read and puts such jobs back.
+- **Stuck retries:** BLOCKED/FAILED jobs whose approval lapsed could never be approved again (only QUEUED was approvable). Now QUEUED, APPROVED (lapsed), BLOCKED and FAILED jobs are approvable, and re-approving a job that already has a valid approval is a no-op (idempotent).
+- **Double-submit risk:** `start_application` restarted SUBMIT_UNKNOWN jobs blindly. Now it refuses until the operator verifies the earlier attempt didn't go through (`verified_not_submitted: true`). The apply-batch skill says how.
+- **Batch cap:** a rule such as `fit>=80` expanded to up to 500 jobs. It now covers one batch (`MAX_BATCH = 10`, best fit first), matching the 10-per-batch rule.
+- 5 new tests; 721 tests green.
+
+Still open (by design for Phase 0, tracked for later): FILTERED_OUT is terminal, so changing the filters doesn't re-evaluate old postings; `phoenix --help` creates the DB; cooldown compares titles by edit distance only; `closing_date` isn't filled by any adapter yet.

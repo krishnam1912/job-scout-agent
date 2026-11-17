@@ -28,8 +28,7 @@ import java.util.Set;
 public class ApplicationService {
 
     private static final int BLOCKER_ASK_PRIORITY = 5;
-    private static final Set<JobState> STARTABLE =
-            Set.of(JobState.APPROVED, JobState.BLOCKED, JobState.FAILED, JobState.SUBMIT_UNKNOWN);
+    private static final Set<JobState> STARTABLE = Set.of(JobState.APPROVED, JobState.BLOCKED, JobState.FAILED);
 
     private final JobRepository jobs;
     private final ApplicationRepository applications;
@@ -53,9 +52,23 @@ public class ApplicationService {
     }
 
     public StartOutcome start(long jobId, String actor) {
+        return start(jobId, actor, false);
+    }
+
+    /**
+     * @param verifiedNotSubmitted only for a SUBMIT_UNKNOWN job: the operator checked the ATS dashboard or the
+     *        confirmation email and the earlier attempt did not go through. Without it such a job is never restarted,
+     *        because a blind retry could apply twice.
+     */
+    public StartOutcome start(long jobId, String actor, boolean verifiedNotSubmitted) {
         return tx.inTx(() -> {
             Job job = jobs.findById(jobId).orElseThrow(() -> new NotFoundException("Job", jobId));
-            if (!STARTABLE.contains(job.state())) {
+            if (job.state() == JobState.SUBMIT_UNKNOWN && !verifiedNotSubmitted) {
+                return StartOutcome.refused(job, "the last attempt may have gone through: check the ATS dashboard or "
+                        + "confirmation email first; record it as submitted if it did, otherwise start again with "
+                        + "verified_not_submitted=true");
+            }
+            if (!STARTABLE.contains(job.state()) && job.state() != JobState.SUBMIT_UNKNOWN) {
                 return StartOutcome.refused(job, "job is " + job.state() + "; it must be approved first");
             }
             if (approvals.usableApproval(jobId).isEmpty()) {

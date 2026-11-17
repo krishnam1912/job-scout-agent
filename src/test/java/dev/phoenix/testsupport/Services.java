@@ -4,6 +4,7 @@ import dev.phoenix.channel.AskService;
 import dev.phoenix.channel.ClaudeSessionChannel;
 import dev.phoenix.dedupe.CooldownGuard;
 import dev.phoenix.service.ApplicationService;
+import dev.phoenix.service.ApprovalExpiry;
 import dev.phoenix.service.ApprovalService;
 import dev.phoenix.service.JobQueryService;
 import dev.phoenix.service.QueueService;
@@ -27,7 +28,7 @@ public final class Services {
     public Services(TestStore s) {
         guard = new CooldownGuard(s.jobs, s.applications, 0.9, 60, s.clock);
         scoring = new ScoringService(s.jobs, s.scores, s.lifecycle, s.tx, s.clock);
-        queue = new QueueService(s.jobs, s.scores);
+        queue = new QueueService(s.jobs, s.scores, new ApprovalExpiry(s.jobs, s.approvals, s.lifecycle, s.tx, s.clock));
         asks = new AskService(s.asks, List.of(new ClaudeSessionChannel()), s.tx, s.clock);
         approvals = new ApprovalService(s.jobs, s.approvals, queue, guard, s.lifecycle, s.tx, s.clock);
         applications = new ApplicationService(s.jobs, s.applications, approvals, guard, s.lifecycle, asks, s.tx, s.clock);

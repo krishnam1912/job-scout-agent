@@ -98,7 +98,7 @@ class ApprovalAndApplicationTest {
 
         assertThat(outcome.approved()).isEmpty();
         assertThat(outcome.refused()).extracting(ApprovalOutcome.Refusal::reason)
-                .anyMatch(r -> r.contains("only QUEUED")).anyMatch(r -> r.contains("not found"));
+                .anyMatch(r -> r.contains("can be approved")).anyMatch(r -> r.contains("not found"));
     }
 
     @Test
@@ -226,6 +226,73 @@ class ApprovalAndApplicationTest {
                 new ResultReport(job.id(), ApplicationOutcome.SUBMITTED, null, null, "CONF-2"), "x");
 
         assertThat(done.job().state()).isEqualTo(JobState.SUBMITTED);
+    }
+
+    @Test
+    void aLapsedApprovalPutsTheJobBackInTheQueueInsteadOfStrandingIt() {
+        Job job = queued("acme", "1", "Backend", 4.4);
+        approve(job);
+        assertThat(services.queue.queue(null, 10)).as("approved jobs leave the queue").isEmpty();
+
+        store.clock.advance(ApprovalService.TTL.plus(Duration.ofMinutes(1)));
+
+        assertThat(services.queue.queue(null, 10)).extracting(e -> e.job().id()).containsExactly(job.id());
+        assertThat(store.jobs.findById(job.id()).orElseThrow().state()).isEqualTo(JobState.QUEUED);
+        assertThat(approve(job).approved()).as("and it can be approved again").containsExactly(job.id());
+    }
+
+    @Test
+    void aBlockedJobWhoseApprovalLapsedCanBeApprovedAgainAndRetried() {
+        Job job = queued("acme", "1", "Backend", 4.4);
+        approve(job);
+        services.applications.start(job.id(), "claude-code");
+        services.applications.record(new ResultReport(job.id(), ApplicationOutcome.BLOCKED, "login", null, null), "x");
+        store.clock.advance(ApprovalService.TTL.plus(Duration.ofMinutes(1)));
+        assertThat(services.applications.start(job.id(), "claude-code").started()).isFalse();
+
+        ApprovalOutcome again = approve(job);
+
+        assertThat(again.approved()).containsExactly(job.id());
+        assertThat(store.jobs.findById(job.id()).orElseThrow().state()).as("stays BLOCKED until started").isEqualTo(JobState.BLOCKED);
+        assertThat(services.applications.start(job.id(), "claude-code").started()).isTrue();
+    }
+
+    @Test
+    void approvingAJobThatAlreadyHasAValidApprovalChangesNothing() {
+        Job job = queued("acme", "1", "Backend", 4.4);
+        approve(job);
+
+        ApprovalOutcome twice = approve(job);
+
+        assertThat(twice.approved()).containsExactly(job.id());
+        assertThat(store.approvals.findByScope("job:" + job.id())).hasSize(1);
+    }
+
+    @Test
+    void aRuleApprovesAtMostOneBatchBestFitFirst() {
+        for (int i = 0; i < ApprovalService.MAX_BATCH + 3; i++) {
+            queued("co" + i, String.valueOf(i), "Backend " + i, i < 3 ? 4.9 : 4.2);
+        }
+
+        ApprovalOutcome outcome = services.approvals.approve(List.of(), ApprovalRule.parse("fit>=80"), "apply all >=80", "claude-chat", "claude-code");
+
+        assertThat(outcome.approved()).hasSize(ApprovalService.MAX_BATCH);
+        assertThat(services.queue.queue(null, 50)).hasSize(3);
+    }
+
+    @Test
+    void anUnknownSubmitIsNotRestartedUntilVerifiedAsNotSubmitted() {
+        Job job = queued("acme", "1", "Backend", 4.4);
+        approve(job);
+        services.applications.start(job.id(), "claude-code");
+        services.applications.record(new ResultReport(job.id(), ApplicationOutcome.SUBMIT_UNKNOWN, null, "page froze", null), "x");
+
+        StartOutcome blind = services.applications.start(job.id(), "claude-code");
+        assertThat(blind.started()).isFalse();
+        assertThat(blind.reason()).contains("verified_not_submitted");
+        assertThat(store.jobs.findById(job.id()).orElseThrow().state()).isEqualTo(JobState.SUBMIT_UNKNOWN);
+
+        assertThat(services.applications.start(job.id(), "claude-code", true).started()).isTrue();
     }
 
     @Test

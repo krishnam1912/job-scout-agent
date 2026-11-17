@@ -32,14 +32,21 @@ public class QueueService {
 
     private final JobRepository jobs;
     private final ScoreRepository scores;
+    private final ApprovalExpiry expiry;
 
-    public QueueService(JobRepository jobs, ScoreRepository scores) {
+    public QueueService(JobRepository jobs, ScoreRepository scores, ApprovalExpiry expiry) {
         this.jobs = jobs;
         this.scores = scores;
+        this.expiry = expiry;
     }
 
-    /** @param minFit minimum fit percent, or null for no minimum */
+    /**
+     * Jobs whose approval lapsed unused are put back first, so an approval that was never acted on can't hide a job.
+     *
+     * @param minFit minimum fit percent, or null for no minimum
+     */
     public List<QueueEntry> queue(Integer minFit, int limit) {
+        expiry.releaseLapsed();
         List<Job> queued = jobs.findByStates(List.of(JobState.QUEUED));
         Map<Long, Score> latest = scores.latestByJob(queued.stream().map(Job::id).toList());
         Map<String, QueueEntry> bestPerGroup = new LinkedHashMap<>();

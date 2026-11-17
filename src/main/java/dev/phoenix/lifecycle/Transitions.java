@@ -21,7 +21,7 @@ public final class Transitions {
         allow(NEAR_MISS, SCORED);
         allow(BELOW, SCORED);
         allow(QUEUED, APPROVED, SKIPPED);
-        allow(APPROVED, IN_PROGRESS, SKIPPED);
+        allow(APPROVED, IN_PROGRESS, SKIPPED, QUEUED); // QUEUED: the approval lapsed unused
         allow(IN_PROGRESS, SUBMITTED, BLOCKED, FAILED, SUBMIT_UNKNOWN, SKIPPED);
         allow(BLOCKED, IN_PROGRESS, SKIPPED);
         allow(FAILED, IN_PROGRESS, SKIPPED);

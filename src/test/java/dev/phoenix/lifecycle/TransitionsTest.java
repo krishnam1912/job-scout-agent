@@ -26,7 +26,7 @@ class TransitionsTest {
             Map.entry(NEAR_MISS, EnumSet.of(SCORED)),
             Map.entry(BELOW, EnumSet.of(SCORED)),
             Map.entry(QUEUED, EnumSet.of(APPROVED, SKIPPED)),
-            Map.entry(APPROVED, EnumSet.of(IN_PROGRESS, SKIPPED)),
+            Map.entry(APPROVED, EnumSet.of(IN_PROGRESS, SKIPPED, QUEUED)),
             Map.entry(IN_PROGRESS, EnumSet.of(SUBMITTED, BLOCKED, FAILED, SUBMIT_UNKNOWN, SKIPPED)),
             Map.entry(BLOCKED, EnumSet.of(IN_PROGRESS, SKIPPED)),
             Map.entry(FAILED, EnumSet.of(IN_PROGRESS, SKIPPED)),

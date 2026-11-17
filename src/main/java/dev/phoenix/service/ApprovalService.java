@@ -16,6 +16,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -24,13 +25,17 @@ import java.util.Set;
 /**
  * Turns the user's go-ahead into approval records and moves the covered jobs from QUEUED to APPROVED. The user's
  * words are stored verbatim as evidence. Every approval is per job, so a rule such as {@code fit>=80} is expanded
- * at the moment it is given and cannot silently cover jobs queued later.
+ * at the moment it is given and cannot silently cover jobs queued later. A rule covers at most one batch
+ * ({@value #MAX_BATCH} jobs, best fit first). Blocked or failed jobs, and jobs whose approval lapsed, can be
+ * approved again; approving a job that already holds a valid approval changes nothing.
  */
 public class ApprovalService {
 
     public static final Duration TTL = Duration.ofHours(24);
     private static final String SCOPE_PREFIX = "job:";
-    private static final int RULE_LIMIT = 500;
+    public static final int MAX_BATCH = 10;
+    private static final Set<JobState> APPROVABLE =
+            EnumSet.of(JobState.QUEUED, JobState.APPROVED, JobState.BLOCKED, JobState.FAILED);
 
     private final JobRepository jobs;
     private final ApprovalRepository approvals;
@@ -63,7 +68,7 @@ public class ApprovalService {
         }
         Set<Long> targets = new LinkedHashSet<>(jobIds);
         if (rule != null) {
-            queue.queue(rule.minFit(), RULE_LIMIT).forEach(e -> targets.add(e.job().id()));
+            queue.queue(rule.minFit(), MAX_BATCH).forEach(e -> targets.add(e.job().id()));
         }
         if (targets.isEmpty()) {
             throw new UserErrorException("Nothing to approve: give job_ids or a rule that matches queued jobs");
@@ -99,8 +104,11 @@ public class ApprovalService {
             return Optional.of("job not found");
         }
         Job job = found.get();
-        if (job.state() != JobState.QUEUED) {
-            return Optional.of("job is " + job.state() + ", only QUEUED jobs can be approved");
+        if (!APPROVABLE.contains(job.state())) {
+            return Optional.of("job is " + job.state() + "; only queued, blocked, failed or lapsed approved jobs can be approved");
+        }
+        if (usableApproval(id).isPresent()) {
+            return Optional.empty();
         }
         GuardResult verdict = guard.check(job);
         if (!verdict.allowed()) {
@@ -108,11 +116,13 @@ public class ApprovalService {
         }
         Instant now = clock.instant();
         approvals.insert(new Approval(0, scope(id), via, userWords, now, now.plus(TTL), null));
-        lifecycle.transition(id, JobState.APPROVED, actor, "approved: " + userWords);
+        if (job.state() == JobState.QUEUED) {
+            lifecycle.transition(id, JobState.APPROVED, actor, "approved: " + userWords);
+        }
         return Optional.empty();
     }
 
-    private static String scope(long jobId) {
+    static String scope(long jobId) {
         return SCOPE_PREFIX + jobId;
     }
 }

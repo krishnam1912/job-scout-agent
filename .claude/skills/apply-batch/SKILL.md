@@ -30,6 +30,7 @@ Interactive sessions only, with the user present in chat. Never run from a sched
    | Email verification code | Read it only if this batch's message allowed it; else report `blocked` |
    | Page error / glitch / job closed | Retry once, then report `failed` (or `skipped` if the job closed) with the reason |
    | Unsure whether the submit went through | Report `submit_unknown`; never guess `submitted` |
+   | A job left in `submit_unknown` earlier | Check the ATS dashboard or confirmation email first. Went through → `record_application_result submitted`. Didn't → `start_application` with `verified_not_submitted: true` |
    | Messages, emails, LinkedIn requests | Never sent; draft only |
 
 6. **Report each job:** call `record_application_result` with `outcome` (`submitted`, `blocked`, `failed`, `submit_unknown`, `skipped`), plus `blocker_type`, `detail` and `confirmation_ref` (the confirmation text or number) as they apply. A blocked job opens an ask; relay it to the user with `list_asks` and record their reply with `answer_ask`. When the employer later sends an assessment, interview or rejection, record it with `mark_outcome`.

@@ -11,6 +11,7 @@ import dev.phoenix.lifecycle.NextActionPolicy;
 import dev.phoenix.service.ApplicationService;
 import dev.phoenix.service.ApprovalService;
 import dev.phoenix.service.JobQueryService;
+import dev.phoenix.service.ApprovalExpiry;
 import dev.phoenix.service.QueueService;
 import dev.phoenix.service.ScoringService;
 import dev.phoenix.service.StatusService;
@@ -78,8 +79,14 @@ public class EngineConfiguration {
     }
 
     @Bean
-    QueueService queueService(JobRepository jobs, ScoreRepository scores) {
-        return new QueueService(jobs, scores);
+    ApprovalExpiry approvalExpiry(JobRepository jobs, ApprovalRepository approvals, LifecycleService lifecycle,
+                                  TxRunner tx, Clock clock) {
+        return new ApprovalExpiry(jobs, approvals, lifecycle, tx, clock);
+    }
+
+    @Bean
+    QueueService queueService(JobRepository jobs, ScoreRepository scores, ApprovalExpiry expiry) {
+        return new QueueService(jobs, scores, expiry);
     }
 
     @Bean
