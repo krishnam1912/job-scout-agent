@@ -10,3 +10,12 @@ archive/
 .DS_Store
 .idea/
 __pycache__/
+
+# Java build output and local engine state
+target/
+*.db
+*.db-wal
+*.db-shm
+logs/
+exports/
+.claude/worktrees/
