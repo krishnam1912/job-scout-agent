@@ -13,7 +13,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
 
 import java.nio.file.Path;
 import java.time.Duration;
@@ -56,7 +56,7 @@ class RepositoriesTest {
         store.insertJob("greenhouse", "acme", "42", "Backend Engineer", JobState.CANDIDATE, null);
 
         assertThatThrownBy(() -> store.insertJob("greenhouse", "acme", "42", "Other", JobState.CANDIDATE, null))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataAccessException.class).hasMessageContaining("UNIQUE");
     }
 
     @Test
