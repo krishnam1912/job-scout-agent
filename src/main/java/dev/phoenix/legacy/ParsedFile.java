@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The outcome of reading one legacy file. Every data row is either in {@code items} or in {@code issues}, so
- * {@code rowsRead == items.size() + issues.size()} always holds and nothing can be dropped silently.
+ * The outcome of reading one legacy file. Every data row is in exactly one of {@code items}, {@code issues}
+ * (could not be used, an error) or {@code skipped} (outside the import by rule), so nothing is dropped silently.
  */
 final class ParsedFile<T> {
 
     private final String name;
     private final List<T> items = new ArrayList<>();
     private final List<RowIssue> issues = new ArrayList<>();
+    private final List<RowIssue> skipped = new ArrayList<>();
 
     ParsedFile(String name) {
         this.name = name;
@@ -29,6 +30,15 @@ final class ParsedFile<T> {
         return issues;
     }
 
+    /** Rows the file's own format puts outside what is imported (for example tables with no date column). */
+    List<RowIssue> skipped() {
+        return skipped;
+    }
+
+    void skip(int line, String reason) {
+        skipped.add(new RowIssue(name, line, reason));
+    }
+
     void accept(T item) {
         items.add(item);
     }
@@ -43,6 +53,6 @@ final class ParsedFile<T> {
     }
 
     int rowsRead() {
-        return items.size() + issues.size();
+        return items.size() + issues.size() + skipped.size();
     }
 }

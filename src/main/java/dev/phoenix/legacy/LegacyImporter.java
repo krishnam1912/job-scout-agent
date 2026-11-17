@@ -40,29 +40,31 @@ public class LegacyImporter {
     public ImportReport run() {
         List<FileCount> counts = new ArrayList<>();
         List<RowIssue> unparsed = new ArrayList<>();
+        List<RowIssue> skipped = new ArrayList<>();
         List<LegacyJob> rows = new ArrayList<>();
         CompanyNames companies = new CompanyNames();
 
-        collect(path(properties.seenFile()), new SeenListParser()::parse, counts, unparsed, rows, companies);
+        Collector collector = new Collector(counts, unparsed, skipped, rows, companies);
+        collector.collect(path(properties.seenFile()), new SeenListParser()::parse);
         PhoenixProperties.Legacy legacy = properties.legacy();
-        collect(path(legacy.queueDir()), new QueueMarkdownParser()::parse, counts, unparsed, rows, companies);
-        collect(path(legacy.leadsCsv()), new LeadsCsvParser()::parse, counts, unparsed, rows, companies);
-        collect(path(legacy.applicationsMd()), new ApplicationsMarkdownParser(companies)::parse, counts, unparsed, rows, companies);
+        collector.collect(path(legacy.queueDir()), new QueueMarkdownParser()::parse);
+        collector.collect(path(legacy.leadsCsv()), new LeadsCsvParser()::parse);
+        collector.collect(path(legacy.applicationsMd()), new ApplicationsMarkdownParser(companies)::parse);
 
         ParsedFile<Referral> referralRows = null;
         Path referralsPath = path(legacy.referralsCsv());
         if (referralsPath != null) {
             referralRows = new ReferralsCsvParser().parse(referralsPath);
-            counts.add(new FileCount(referralRows.name(), referralRows.rowsRead(), referralRows.items().size()));
+            counts.add(new FileCount(referralRows.name(), referralRows.rowsRead(), referralRows.items().size(), 0));
             unparsed.addAll(referralRows.issues());
         }
         List<Referral> referralList = referralRows == null ? List.of() : referralRows.items();
         List<LegacyJob> merged = merger.merge(rows);
-        return tx.inTx(() -> store(merged, referralList, counts, unparsed));
+        return tx.inTx(() -> store(merged, referralList, counts, unparsed, skipped));
     }
 
     private ImportReport store(List<LegacyJob> merged, List<Referral> referralList, List<FileCount> counts,
-                               List<RowIssue> unparsed) {
+                               List<RowIssue> unparsed, List<RowIssue> skipped) {
         Map<JobState, Integer> byState = new EnumMap<>(JobState.class);
         int created = 0;
         int unchanged = 0;
@@ -91,19 +93,24 @@ public class LegacyImporter {
             }
         }
         return new ImportReport(counts, created, unchanged, byState, synthetic, referralsCreated,
-                referralList.size() - referralsCreated, unparsed);
+                referralList.size() - referralsCreated, unparsed, skipped);
     }
 
-    private void collect(Path file, Function<Path, ParsedFile<LegacyJob>> parser,
-                         List<FileCount> counts, List<RowIssue> unparsed, List<LegacyJob> rows, CompanyNames companies) {
-        if (file == null) {
-            return;
+    /** Gathers what each parsed file contributes: its count line, its problems and its jobs. */
+    private record Collector(List<FileCount> counts, List<RowIssue> unparsed, List<RowIssue> skipped,
+                             List<LegacyJob> rows, CompanyNames companies) {
+
+        void collect(Path file, Function<Path, ParsedFile<LegacyJob>> parser) {
+            if (file == null) {
+                return;
+            }
+            ParsedFile<LegacyJob> parsed = parser.apply(file);
+            counts.add(new FileCount(parsed.name(), parsed.rowsRead(), parsed.items().size(), parsed.skipped().size()));
+            unparsed.addAll(parsed.issues());
+            skipped.addAll(parsed.skipped());
+            parsed.items().forEach(j -> companies.learn(j.company()));
+            rows.addAll(parsed.items());
         }
-        ParsedFile<LegacyJob> parsed = parser.apply(file);
-        counts.add(new FileCount(parsed.name(), parsed.rowsRead(), parsed.items().size()));
-        unparsed.addAll(parsed.issues());
-        parsed.items().forEach(j -> companies.learn(j.company()));
-        rows.addAll(parsed.items());
     }
 
     private Path path(String configured) {

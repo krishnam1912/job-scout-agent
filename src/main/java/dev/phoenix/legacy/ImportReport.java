@@ -11,16 +11,18 @@ import java.util.stream.Collectors;
  * non-empty list is the signal that something needs the user's attention.
  */
 public record ImportReport(List<FileCount> files, int jobsCreated, int jobsUnchanged, Map<JobState, Integer> createdByState,
-                           int syntheticIds, int referralsCreated, int referralsUnchanged, List<RowIssue> unparsed) {
+                           int syntheticIds, int referralsCreated, int referralsUnchanged, List<RowIssue> unparsed,
+                           List<RowIssue> skippedByRule) {
 
-    /** Rows of one file: how many were read and how many became jobs (or referrals). */
-    public record FileCount(String file, int rowsRead, int rowsUsed) {
+    /** Rows of one file: how many were read, how many became jobs (or referrals) and how many were skipped by rule. */
+    public record FileCount(String file, int rowsRead, int rowsUsed, int rowsSkipped) {
     }
 
     public ImportReport {
         files = List.copyOf(files);
         createdByState = Map.copyOf(createdByState);
         unparsed = List.copyOf(unparsed);
+        skippedByRule = List.copyOf(skippedByRule);
     }
 
     public boolean clean() {
@@ -29,7 +31,7 @@ public record ImportReport(List<FileCount> files, int jobsCreated, int jobsUncha
 
     public String render() {
         StringBuilder out = new StringBuilder("Legacy import\n");
-        files.forEach(f -> out.append(String.format("  %-28s rows read %4d, used %4d%n", f.file(), f.rowsRead(), f.rowsUsed())));
+        files.forEach(f -> out.append(String.format("  %-28s rows read %4d, used %4d, skipped by rule %4d%n", f.file(), f.rowsRead(), f.rowsUsed(), f.rowsSkipped())));
         out.append(String.format("Jobs: %d created, %d already imported%n", jobsCreated, jobsUnchanged));
         if (!createdByState.isEmpty()) {
             out.append("Created by state: ").append(createdByState.entrySet().stream()
@@ -38,6 +40,9 @@ public record ImportReport(List<FileCount> files, int jobsCreated, int jobsUncha
         }
         out.append(String.format("Rows with a made-up id (none found in the row): %d%n", syntheticIds));
         out.append(String.format("Referrals: %d created, %d already imported%n", referralsCreated, referralsUnchanged));
+        if (!skippedByRule.isEmpty()) {
+            out.append(String.format("Skipped by rule (%s): %d rows%n", skippedByRule.get(0).reason(), skippedByRule.size()));
+        }
         if (unparsed.isEmpty()) {
             out.append("Unparsed rows: none\n");
         } else {

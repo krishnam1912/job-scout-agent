@@ -68,13 +68,14 @@ class LegacyImporterTest {
     void importsEveryFileAndReconcilesTheCounts() {
         ImportReport report = importer.run();
 
-        assertThat(report.files()).extracting(ImportReport.FileCount::file, ImportReport.FileCount::rowsRead, ImportReport.FileCount::rowsUsed)
+        assertThat(report.files()).extracting(ImportReport.FileCount::file, ImportReport.FileCount::rowsRead, ImportReport.FileCount::rowsUsed,
+                        ImportReport.FileCount::rowsSkipped)
                 .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple("seen.txt", 4, 3),
-                        org.assertj.core.groups.Tuple.tuple("queue/", 4, 3),
-                        org.assertj.core.groups.Tuple.tuple("leads.csv", 7, 5),
-                        org.assertj.core.groups.Tuple.tuple("applications.md", 6, 4),
-                        org.assertj.core.groups.Tuple.tuple("referrals.csv", 2, 1));
+                        org.assertj.core.groups.Tuple.tuple("seen.txt", 4, 3, 0),
+                        org.assertj.core.groups.Tuple.tuple("queue/", 4, 3, 0),
+                        org.assertj.core.groups.Tuple.tuple("leads.csv", 7, 5, 0),
+                        org.assertj.core.groups.Tuple.tuple("applications.md", 6, 4, 1),
+                        org.assertj.core.groups.Tuple.tuple("referrals.csv", 2, 1, 0));
         assertThat(report.jobsCreated()).isEqualTo(11);
         assertThat(report.jobsUnchanged()).isZero();
         assertThat(report.createdByState()).containsExactlyInAnyOrderEntriesOf(Map.of(
@@ -82,15 +83,16 @@ class LegacyImporterTest {
         assertThat(report.syntheticIds()).isEqualTo(2);
         assertThat(report.referralsCreated()).isEqualTo(1);
         assertThat(report.clean()).isFalse();
+        assertThat(report.skippedByRule()).extracting(RowIssue::toString)
+                .containsExactly("applications.md:18: table has no date column");
         assertThat(report.unparsed()).extracting(RowIssue::toString).containsExactlyInAnyOrder(
                 "seen.txt:5: expected company:id",
                 "queue/2026-01-02.md:8: row has no usable score",
                 "leads.csv:7: unrecognised status 'Teleported'",
                 "leads.csv:8: expected 13 columns, found 3",
                 "applications.md:14: unrecognised status 'Mystery status'",
-                "applications.md:18: row has no date",
                 "referrals.csv:3: row has no name");
-        assertThat(report.render()).contains("11 created").contains("SUBMITTED 4").contains("applications.md:18");
+        assertThat(report.render()).contains("11 created").contains("SUBMITTED 4").contains("Skipped by rule (table has no date column): 1 rows").contains("leads.csv:7");
     }
 
     @Test

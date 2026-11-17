@@ -44,6 +44,10 @@ final class ApplicationsMarkdownParser {
             out.reject(row.line(), "table row without a header");
             return;
         }
+        if (!row.hasColumn("date")) {
+            out.skip(row.line(), "table has no date column");
+            return;
+        }
         Matcher date = DATE.matcher(row.cell("date"));
         if (!date.find()) {
             out.reject(row.line(), "row has no date");
