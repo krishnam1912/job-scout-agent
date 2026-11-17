@@ -3,7 +3,6 @@ package dev.phoenix.store;
 import dev.phoenix.domain.Referral;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
-import java.util.List;
 
 public class ReferralRepository {
 
@@ -27,14 +26,6 @@ public class ReferralRepository {
                 .param("n", r.name()).param("conn", r.connection()).param("c", r.company()).param("j", r.jobRef())
                 .param("s", r.status()).param("l", r.lastContact()).param("f", r.followUp()).param("note", r.note())
                 .update();
-    }
-
-    public List<Referral> findAll() {
-        return jdbc.sql("SELECT name, connection, company, job_ref, status, last_contact, follow_up, note FROM referrals ORDER BY id")
-                .query((rs, i) -> new Referral(rs.getString("name"), rs.getString("connection"), rs.getString("company"),
-                        rs.getString("job_ref"), rs.getString("status"), rs.getString("last_contact"),
-                        rs.getString("follow_up"), rs.getString("note")))
-                .list();
     }
 
     private static String nz(String s) {

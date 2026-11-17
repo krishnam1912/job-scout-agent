@@ -3,6 +3,8 @@ package dev.phoenix.store;
 import dev.phoenix.domain.Score;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +52,7 @@ public class ScoreRepository {
         return out;
     }
 
-    private static Score map(java.sql.ResultSet rs, int row) throws java.sql.SQLException {
+    private static Score map(ResultSet rs, int row) throws SQLException {
         return new Score(rs.getLong("id"), rs.getLong("job_id"), rs.getString("scorer"), rs.getDouble("score"),
                 rs.getInt("fit_pct"), rs.getString("rationale"), rs.getString("rubric_version"),
                 Times.parse(rs.getString("scored_at")));

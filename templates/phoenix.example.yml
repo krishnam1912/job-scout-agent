@@ -1,0 +1,19 @@
+# Example engine config. Copy to $PHOENIX_HOME/phoenix.yml (default home: ~/.phoenix) and adjust.
+# Relative paths are relative to the home folder; absolute paths work too. Every key is optional.
+operator: claude-code            # claude-code | standalone
+sources: scripts/sources.json    # job boards to scan
+filters: profile/filters.json    # filters + pre-score (same shape as templates/filters.example.json)
+seen-file: state/seen.txt        # legacy seen list, read only by `phoenix import-legacy`
+legacy:                          # only for `phoenix import-legacy`
+  leads-csv: data/leads.csv
+  applications-md: data/applications.md
+  referrals-csv: data/referrals.csv
+  queue-dir: queue
+dedupe:
+  similarity-threshold: 0.9      # MinHash similarity at which two postings are the same role
+  company-cooldown-days: 60      # block a second application to a similar role at one company
+# llm:                           # used when operator is standalone, and by `phoenix llm-test`
+#   providers:
+#     local: {type: openai-compatible, base-url: "http://localhost:11434/v1", model: "qwen2.5:3b", api-key-env: ""}
+#     openai: {type: openai-compatible, base-url: "https://api.openai.com/v1", model: "gpt-4o-mini", api-key-env: "OPENAI_API_KEY"}
+#   routing: {extract: local, score: openai, answer: openai}

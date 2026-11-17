@@ -27,13 +27,29 @@ Your personal details never enter the repo: `/setup` asks for them on first run 
    - standard application answers (notice period, work authorisation, self-ID defaults)
 4. Run `/find-jobs`, open `queue/<today>.md`, then reply `apply 1,2` to start `/apply-batch`.
 
+## Java engine
+The deterministic parts (state in SQLite, the job lifecycle, four layers of de-duplication, discovery from the public job boards, approvals) run in a Java 21 + Spring Boot engine. Claude Code only makes the judgment calls, through MCP tools. Other models (GPT, Ollama, LM Studio) and chat channels (Telegram) are extension points, not requirements.
+
+```bash
+./mvnw -q package                      # builds target/phoenix.jar (needs Java 21)
+bin/phoenix status                     # counts, open asks, jobs at risk
+bin/phoenix scan --dry-run --limit 5   # preview candidates; writes nothing
+bin/phoenix import-legacy              # one-off import of the old CSV/Markdown files
+bin/phoenix export                     # leads.csv, applications.md, STATUS.md, queue.md
+```
+
+- **Data and config:** everything personal lives in `$PHOENIX_HOME` (default `~/.phoenix`, or pass `--home DIR`). Start from `templates/phoenix.example.yml`; pointing `PHOENIX_HOME` at this folder reuses `profile/`, `state/` and `data/`.
+- **Claude Code:** `.mcp.json` registers the `phoenix` MCP server (`bin/phoenix mcp`). `/find-jobs` and `/apply-batch` call its tools: `scan_jobs`, `record_scores`, `get_queue`, `get_job`, `record_approval`, `start_application`, `record_application_result`, `list_asks`, `answer_ask`, `status`, `mark_outcome`.
+- **Safety:** nothing is submitted or sent without an approval record the user created in chat; `start_application` also refuses roles already applied to. Design: [docs/design/java-core-phase0.md](docs/design/java-core-phase0.md), channels: [docs/design/channels.md](docs/design/channels.md).
+- **Python fallback:** `scripts/scan.py` still works on its own (below).
+
 ## Run it from your phone
 Start runs, answer questions and approve applications from the Claude mobile app or any browser. Use Chrome Remote Desktop for sign-ins and CAPTCHAs. Step-by-step: [docs/remote-control.md](docs/remote-control.md).
 
 ## What's tracked vs. private
 | Tracked in git | Local only (git-ignored) |
 |---|---|
-| `scripts/` scanner + job-board list | `profile/` details, resume, preferences, filters, answers |
+| `scripts/` Python scanner + job-board list · `src/` Java engine | `profile/` details, resume, preferences, filters, answers |
 | `templates/` blanks for `/setup` | `data/` leads, applications, log, status |
 | `playbooks/` how each job site's form behaves | `state/` seen job IDs · `queue/` daily shortlists |
 | `.claude/skills/` the three commands | `*.pdf`, `*.docx` |

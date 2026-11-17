@@ -42,7 +42,7 @@ class RepositoriesTest {
     void aJobRoundTripsWithItsOptionalFields() {
         Job saved = store.insertJob("greenhouse", "acme", "42", "Backend Engineer", JobState.CANDIDATE, null);
 
-        Job loaded = store.jobs.findByKey("greenhouse", "acme", "42").orElseThrow();
+        Job loaded = store.find("acme", "42").orElseThrow();
 
         assertThat(loaded).isEqualTo(saved);
         assertThat(loaded.groupId()).isNull();
@@ -79,9 +79,9 @@ class RepositoriesTest {
         Job notYet = store.insertJob("a", "acme", "2", "T2", JobState.QUEUED, null);
         store.jobs.updateState(notYet.id(), JobState.QUEUED, now.plus(Duration.ofDays(1)), null);
         Job closing = store.insertJob("a", "acme", "3", "T3", JobState.SCORED, null);
-        store.jobs.updateClosingDate(closing.id(), now.plus(Duration.ofHours(48)), null);
+        store.setClosingDate(closing.id(), now.plus(Duration.ofHours(48)));
         Job closingButApplied = store.insertJob("a", "acme", "4", "T4", JobState.SUBMITTED, null);
-        store.jobs.updateClosingDate(closingButApplied.id(), now.plus(Duration.ofHours(1)), null);
+        store.setClosingDate(closingButApplied.id(), now.plus(Duration.ofHours(1)));
 
         List<Job> atRisk = store.jobs.findAtRisk(now, now.plus(Duration.ofHours(72)));
 
@@ -143,13 +143,11 @@ class RepositoriesTest {
         assertThat(store.asks.findByStatuses(List.of(AskStatus.OPEN))).hasSize(1);
         store.asks.markOffered(id, "claude-session");
         assertThat(store.asks.findById(id).orElseThrow().status()).isEqualTo(AskStatus.OFFERED);
-        assertThat(store.asks.findOpenForJob(job.id())).hasSize(1);
         store.asks.markAnswered(id, "done", store.clock.instant());
 
         Ask answered = store.asks.findById(id).orElseThrow();
         assertThat(answered.status()).isEqualTo(AskStatus.ANSWERED);
         assertThat(answered.answer()).isEqualTo("done");
-        assertThat(store.asks.findOpenForJob(job.id())).isEmpty();
     }
 
     @Test
@@ -175,7 +173,7 @@ class RepositoriesTest {
         store.referrals.insert(r);
 
         assertThat(store.referrals.exists(r)).isTrue();
-        assertThat(store.referrals.findAll()).containsExactly(r);
+        assertThat(store.allReferrals()).containsExactly(r);
     }
 
     @Test

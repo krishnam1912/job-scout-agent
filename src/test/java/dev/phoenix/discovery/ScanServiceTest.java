@@ -65,8 +65,8 @@ class ScanServiceTest {
         });
         assertThat(result.stats().fetched()).isEqualTo(3);
         assertThat(result.stats().filteredByReason()).containsEntry("title", 1).containsEntry("location", 1);
-        assertThat(store.jobs.findByKey("greenhouse", "acme", "1001").orElseThrow().state()).isEqualTo(JobState.CANDIDATE);
-        Job filtered = store.jobs.findByKey("greenhouse", "acme", "1002").orElseThrow();
+        assertThat(store.find("acme", "1001").orElseThrow().state()).isEqualTo(JobState.CANDIDATE);
+        Job filtered = store.find("acme", "1002").orElseThrow();
         assertThat(filtered.state()).isEqualTo(JobState.FILTERED_OUT);
         assertThat(filtered.jdText()).as("filtered-out jobs keep no description").isNull();
         assertThat(store.events.findByJob(filtered.id())).extracting(e -> e.to())
@@ -79,12 +79,12 @@ class ScanServiceTest {
     void aRescanOnlyRefreshesLastSeenAndOffersTheSameUnscoredCandidate() {
         board(job("1001", "SDE II Backend", "Bengaluru", JD));
         scan(false);
-        Job first = store.jobs.findByKey("greenhouse", "acme", "1001").orElseThrow();
+        Job first = store.find("acme", "1001").orElseThrow();
         store.clock.advance(Duration.ofDays(1));
 
         ScanResult second = scan(false);
 
-        Job again = store.jobs.findByKey("greenhouse", "acme", "1001").orElseThrow();
+        Job again = store.find("acme", "1001").orElseThrow();
         assertThat(again.id()).isEqualTo(first.id());
         assertThat(again.lastSeen()).isAfter(first.lastSeen());
         assertThat(again.firstSeen()).isEqualTo(first.firstSeen());
@@ -99,7 +99,7 @@ class ScanServiceTest {
     void aScoredJobIsNotOfferedAgain() {
         board(job("1001", "SDE II Backend", "Bengaluru", JD));
         scan(false);
-        Job job = store.jobs.findByKey("greenhouse", "acme", "1001").orElseThrow();
+        Job job = store.find("acme", "1001").orElseThrow();
         store.lifecycle.transition(job.id(), JobState.SCORED, "test", null);
 
         assertThat(scan(false).candidates()).isEmpty();
@@ -158,7 +158,7 @@ class ScanServiceTest {
     void aNewPostingOfARoleThatIsAlreadyEngagedNeverResurfaces() {
         board(job("2001", "SDE II Backend", "Bengaluru", JD));
         scan(false);
-        Job first = store.jobs.findByKey("greenhouse", "acme", "2001").orElseThrow();
+        Job first = store.find("acme", "2001").orElseThrow();
         store.lifecycle.transition(first.id(), JobState.SCORED, "test", null);
         store.lifecycle.transition(first.id(), JobState.QUEUED, "test", null);
         board(job("2001", "SDE II Backend", "Bengaluru", JD), job("2002", "SDE II Backend", "Bengaluru", JD));
@@ -167,7 +167,7 @@ class ScanServiceTest {
 
         assertThat(result.candidates()).isEmpty();
         assertThat(result.stats().duplicatesHidden()).isEqualTo(1);
-        Job dup = store.jobs.findByKey("greenhouse", "acme", "2002").orElseThrow();
+        Job dup = store.find("acme", "2002").orElseThrow();
         assertThat(dup.state()).isEqualTo(JobState.FILTERED_OUT);
         assertThat(dup.groupId()).isEqualTo(first.groupId());
     }
@@ -179,25 +179,25 @@ class ScanServiceTest {
         store.clock.advance(Duration.ofDays(1));
         board(job("3001", "SDE II Backend", "Bengaluru", JD));
         scan(false);
-        Job gone = store.jobs.findByKey("greenhouse", "acme", "3002").orElseThrow();
+        Job gone = store.find("acme", "3002").orElseThrow();
         assertThat(gone.state()).as("one miss is not enough").isEqualTo(JobState.CANDIDATE);
         store.clock.advance(Duration.ofDays(1));
 
         ScanResult third = scan(false);
 
-        Job closed = store.jobs.findByKey("greenhouse", "acme", "3002").orElseThrow();
+        Job closed = store.find("acme", "3002").orElseThrow();
         assertThat(closed.state()).isEqualTo(JobState.CLOSED);
         assertThat(closed.closedAt()).isNotNull();
         assertThat(third.stats().closed()).isEqualTo(1);
         assertThat(store.events.findByJob(closed.id()).get(2).actor()).isEqualTo("scanner");
-        assertThat(store.jobs.findByKey("greenhouse", "acme", "3001").orElseThrow().state()).isEqualTo(JobState.CANDIDATE);
+        assertThat(store.find("acme", "3001").orElseThrow().state()).isEqualTo(JobState.CANDIDATE);
     }
 
     @Test
     void jobsAlreadyBeingAppliedToAreNeverClosedByTheirPostingDisappearing() {
         board(job("3001", "SDE II Backend", "Bengaluru", JD));
         scan(false);
-        Job job = store.jobs.findByKey("greenhouse", "acme", "3001").orElseThrow();
+        Job job = store.find("acme", "3001").orElseThrow();
         store.lifecycle.transition(job.id(), JobState.SCORED, "t", null);
         store.lifecycle.transition(job.id(), JobState.QUEUED, "t", null);
         store.lifecycle.transition(job.id(), JobState.APPROVED, "t", null);
@@ -222,7 +222,7 @@ class ScanServiceTest {
             assertThat(result.stats().failedBoards()).isEqualTo(1);
         }
 
-        assertThat(store.jobs.findByKey("greenhouse", "acme", "3001").orElseThrow().state()).isEqualTo(JobState.CANDIDATE);
+        assertThat(store.find("acme", "3001").orElseThrow().state()).isEqualTo(JobState.CANDIDATE);
         assertThat(store.health.find("greenhouse", "acme").orElseThrow().consecutiveFailures()).isEqualTo(3);
         assertThat(store.runs.latest("scan").orElseThrow().status()).isEqualTo("OK");
     }
@@ -246,7 +246,7 @@ class ScanServiceTest {
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> scan(false)).hasMessageContaining("forced failure");
 
-        assertThat(store.jobs.findByKey("greenhouse", "acme", "1001")).isEmpty();
+        assertThat(store.find("acme", "1001")).isEmpty();
         assertThat(store.runs.latest("scan").orElseThrow().status()).isEqualTo("FAILED");
     }
 }

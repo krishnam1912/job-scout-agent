@@ -113,7 +113,7 @@ class ScoringAndQueueTest {
         Job b = queued("2", "B", null, 4.5, 10);
         store.clock.advance(Duration.ofHours(1));
         Job c = queued("3", "C", null, 4.0, 10);
-        store.jobs.updateClosingDate(c.id(), store.clock.instant().plus(Duration.ofDays(10)), null);
+        store.setClosingDate(c.id(), store.clock.instant().plus(Duration.ofDays(10)));
 
         List<QueueEntry> queue = services.queue.queue(null, 10);
 

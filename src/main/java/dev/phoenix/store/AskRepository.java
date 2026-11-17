@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -45,11 +47,6 @@ public class AskRepository {
                 .param("s", statuses.stream().map(Enum::name).toList()).query(AskRepository::map).list();
     }
 
-    public List<Ask> findOpenForJob(long jobId) {
-        return jdbc.sql("SELECT " + COLUMNS + " FROM asks WHERE job_id = :j AND status <> 'ANSWERED' ORDER BY id")
-                .param("j", jobId).query(AskRepository::map).list();
-    }
-
     public void markOffered(long id, String channel) {
         jdbc.sql("UPDATE asks SET status = 'OFFERED', channel = :c WHERE id = :id AND status = 'OPEN'")
                 .param("c", channel).param("id", id).update();
@@ -60,7 +57,7 @@ public class AskRepository {
                 .param("a", answer).param("at", Times.format(at)).param("id", id).update();
     }
 
-    private static Ask map(java.sql.ResultSet rs, int row) throws java.sql.SQLException {
+    private static Ask map(ResultSet rs, int row) throws SQLException {
         long job = rs.getLong("job_id");
         Long jobId = rs.wasNull() ? null : job;
         return new Ask(rs.getLong("id"), jobId, rs.getString("kind"), rs.getString("prompt"), rs.getString("options"),

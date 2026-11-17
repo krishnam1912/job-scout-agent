@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -30,12 +32,6 @@ public class JobRepository {
                 .query(JobRepository::map).optional();
     }
 
-    public Optional<Job> findByKey(String source, String company, String extId) {
-        return jdbc.sql("SELECT " + COLUMNS + " FROM jobs WHERE source = :s AND company = :c AND ext_id = :e")
-                .param("s", source).param("c", company).param("e", extId)
-                .query(JobRepository::map).optional();
-    }
-
     /** Same company and external id from any source (a legacy row and a scanned row are the same posting). */
     public List<Job> findByCompanyAndExtId(String company, String extId) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM jobs WHERE company = :c AND ext_id = :e ORDER BY id")
@@ -45,11 +41,6 @@ public class JobRepository {
     public List<Job> findByExtId(String extId) {
         return jdbc.sql("SELECT " + COLUMNS + " FROM jobs WHERE ext_id = :e ORDER BY id")
                 .param("e", extId).query(JobRepository::map).list();
-    }
-
-    public List<Job> findByCompany(String company) {
-        return jdbc.sql("SELECT " + COLUMNS + " FROM jobs WHERE company = :c ORDER BY id")
-                .param("c", company).query(JobRepository::map).list();
     }
 
     public List<Job> findByGroup(long groupId) {
@@ -120,13 +111,6 @@ public class JobRepository {
         jdbc.sql("UPDATE jobs SET last_seen = :at WHERE id = :id").param("at", Times.format(at)).param("id", id).update();
     }
 
-    /** Refreshes the posting data of a job (a re-fetch can carry a newer title, URL or JD). */
-    public void updatePosting(long id, String url, String title, String location, String jdText, String jdHash) {
-        jdbc.sql("UPDATE jobs SET url = :url, title = :title, location = :loc, jd_text = :jd, jd_hash = :hash WHERE id = :id")
-                .param("url", url).param("title", title).param("loc", location)
-                .param("jd", jdText).param("hash", jdHash).param("id", id).update();
-    }
-
     public void updateScan(long id, Integer prescore, Long groupId) {
         jdbc.sql("UPDATE jobs SET prescore = :p, group_id = :g WHERE id = :id")
                 .param("p", prescore).param("g", groupId).param("id", id).update();
@@ -138,12 +122,7 @@ public class JobRepository {
                 .param("id", id).update();
     }
 
-    public void updateClosingDate(long id, Instant closingDate, Instant nextActionAt) {
-        jdbc.sql("UPDATE jobs SET closing_date = :d, next_action_at = :n WHERE id = :id")
-                .param("d", Times.format(closingDate)).param("n", Times.format(nextActionAt)).param("id", id).update();
-    }
-
-    private static Job map(java.sql.ResultSet rs, int row) throws java.sql.SQLException {
+    private static Job map(ResultSet rs, int row) throws SQLException {
         long group = rs.getLong("group_id");
         Long groupId = rs.wasNull() ? null : group;
         int prescore = rs.getInt("prescore");

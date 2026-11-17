@@ -87,7 +87,7 @@ class LifecycleServiceTest {
     void aJobWithACloseDateInsideTheWindowIsDueImmediately() {
         Instant closing = store.clock.instant().plus(Duration.ofHours(24));
         Job job = store.insertJob("acme", "1", "Backend Engineer", JobState.SCORED);
-        store.jobs.updateClosingDate(job.id(), closing, null);
+        store.setClosingDate(job.id(), closing);
 
         store.lifecycle.transition(job.id(), JobState.QUEUED, "x", null);
 

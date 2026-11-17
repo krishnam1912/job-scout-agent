@@ -3,6 +3,7 @@ package dev.phoenix.testsupport;
 import com.zaxxer.hikari.HikariDataSource;
 import dev.phoenix.domain.Job;
 import dev.phoenix.domain.JobState;
+import dev.phoenix.domain.Referral;
 import dev.phoenix.lifecycle.LifecycleService;
 import dev.phoenix.lifecycle.NextActionPolicy;
 import dev.phoenix.store.ApplicationRepository;
@@ -17,12 +18,15 @@ import dev.phoenix.store.ReferralRepository;
 import dev.phoenix.store.RunRepository;
 import dev.phoenix.store.ScoreRepository;
 import dev.phoenix.store.SourceHealthRepository;
+import dev.phoenix.store.Times;
 import dev.phoenix.store.TxRunner;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 /** A real SQLite database in a temp directory with every repository wired, for store and service tests. */
 public final class TestStore implements AutoCloseable {
@@ -83,6 +87,25 @@ public final class TestStore implements AutoCloseable {
                 state, "jd for " + title, null, 50, now, now, null, null, null);
         long id = jobs.insert(draft);
         return jobs.findById(id).orElseThrow();
+    }
+
+    /** The job with this company and external id from any source. */
+    public Optional<Job> find(String company, String extId) {
+        return jobs.findByCompanyAndExtId(company, extId).stream().findFirst();
+    }
+
+    /** Sets a closing date, which no source provides yet, so urgency rules can be tested. */
+    public void setClosingDate(long jobId, Instant closingDate) {
+        jdbc.sql("UPDATE jobs SET closing_date = :d WHERE id = :id").param("d", Times.format(closingDate))
+                .param("id", jobId).update();
+    }
+
+    public List<Referral> allReferrals() {
+        return jdbc.sql("SELECT name, connection, company, job_ref, status, last_contact, follow_up, note FROM referrals ORDER BY id")
+                .query((rs, i) -> new Referral(rs.getString("name"), rs.getString("connection"), rs.getString("company"),
+                        rs.getString("job_ref"), rs.getString("status"), rs.getString("last_contact"),
+                        rs.getString("follow_up"), rs.getString("note")))
+                .list();
     }
 
     @Override

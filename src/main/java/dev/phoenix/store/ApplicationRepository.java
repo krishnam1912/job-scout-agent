@@ -4,6 +4,8 @@ import dev.phoenix.domain.Application;
 import dev.phoenix.domain.JobState;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +50,7 @@ public class ApplicationRepository {
                 .query(ApplicationRepository::map).list();
     }
 
-    private static Application map(java.sql.ResultSet rs, int row) throws java.sql.SQLException {
+    private static Application map(ResultSet rs, int row) throws SQLException {
         return new Application(rs.getLong("id"), rs.getLong("job_id"), JobState.valueOf(rs.getString("state")),
                 rs.getInt("attempts"), rs.getString("blocker_type"), rs.getString("blocker_detail"),
                 rs.getString("resume_version"), Times.parse(rs.getString("submitted_at")),

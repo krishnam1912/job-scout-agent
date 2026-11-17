@@ -65,7 +65,9 @@ class TransitionsTest {
     void terminalStatesHaveNoWayOut() {
         for (JobState s : JobState.values()) {
             if (s.isTerminal()) {
-                assertThat(Transitions.from(s)).as(s.name()).isEmpty();
+                for (JobState to : JobState.values()) {
+                    assertThat(Transitions.isAllowed(s, to)).as(s + " -> " + to).isFalse();
+                }
             }
         }
     }

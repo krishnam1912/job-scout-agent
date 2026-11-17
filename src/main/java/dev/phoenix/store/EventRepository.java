@@ -31,12 +31,4 @@ public class EventRepository {
                         Times.parse(rs.getString("at"))))
                 .list();
     }
-
-    /** Time of the latest event that moved the job into {@code state}, if any. */
-    public java.util.Optional<Instant> lastEnteredAt(long jobId, JobState state) {
-        return jdbc.sql("SELECT MAX(at) FROM events WHERE job_id = :j AND to_state = :s")
-                .param("j", jobId).param("s", state.name())
-                .query((rs, i) -> Times.parse(rs.getString(1))).optional()
-                .filter(java.util.Objects::nonNull);
-    }
 }

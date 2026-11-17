@@ -61,7 +61,7 @@ class LegacyImporterTest {
     }
 
     private Job job(String company, String extId) {
-        return store.jobs.findByKey("legacy", company, extId).orElseThrow();
+        return store.find(company, extId).orElseThrow();
     }
 
     @Test
@@ -176,7 +176,7 @@ class LegacyImporterTest {
         assertThat(second.referralsUnchanged()).isEqualTo(1);
         assertThat(store.jobs.findAll()).hasSize((int) jobs);
         assertThat(store.jobs.findAll().stream().mapToLong(j -> store.events.findByJob(j.id()).size()).sum()).isEqualTo(events);
-        assertThat(store.referrals.findAll()).hasSize(1);
+        assertThat(store.allReferrals()).hasSize(1);
     }
 
     @Test
@@ -192,7 +192,7 @@ class LegacyImporterTest {
     void importedReferralsKeepTheirColumns() {
         importer.run();
 
-        assertThat(store.referrals.findAll()).singleElement().satisfies(r -> {
+        assertThat(store.allReferrals()).singleElement().satisfies(r -> {
             assertThat(r.name()).isEqualTo("Pat Example");
             assertThat(r.company()).isEqualTo("Acme");
             assertThat(r.jobRef()).isEqualTo("1001");

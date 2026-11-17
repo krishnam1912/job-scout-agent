@@ -47,8 +47,4 @@ public final class Transitions {
     public static boolean isAllowed(JobState from, JobState to) {
         return ALLOWED.getOrDefault(from, Set.of()).contains(to);
     }
-
-    public static Set<JobState> from(JobState from) {
-        return Set.copyOf(ALLOWED.getOrDefault(from, Set.of()));
-    }
 }
