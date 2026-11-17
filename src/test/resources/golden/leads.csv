@@ -1,0 +1,5 @@
+Date found,Company,Role,Job ID,Location,Work mode,Score,Why it fits,Gaps,URL,Referral angle,Status,Notes
+2026-01-02,acme,Backend Engineer II,1001,Bengaluru,,4.4,"Java, Kafka match",,https://jobs.example.com/acme/1001,,Applied,"in office, ""hybrid"""
+2026-01-03,acme,Platform | Engineer,1002,Pune,,3.8,Good fit,,https://jobs.example.com/acme/1002,,New,
+2026-01-03,globex,Data Engineer,2001,Pune,,3.2,Meh,,https://jobs.example.com/globex/2001,,Below,
+2026-01-04,initech,Backend,3001,Remote,,4.1,ok,,https://jobs.example.com/initech/3001,,Blocked,login wall
