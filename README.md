@@ -27,6 +27,9 @@ Your personal details never enter the repo: `/setup` asks for them on first run 
    - standard application answers (notice period, work authorisation, self-ID defaults)
 4. Run `/find-jobs`, open `queue/<today>.md`, then reply `apply 1,2` to start `/apply-batch`.
 
+## Run it from your phone
+Start runs, answer questions and approve applications from the Claude mobile app or any browser. Use Chrome Remote Desktop for sign-ins and CAPTCHAs. Step-by-step: [docs/remote-control.md](docs/remote-control.md).
+
 ## What's tracked vs. private
 | Tracked in git | Local only (git-ignored) |
 |---|---|
