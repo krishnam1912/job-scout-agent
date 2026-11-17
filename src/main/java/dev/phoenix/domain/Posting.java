@@ -6,4 +6,11 @@ package dev.phoenix.domain;
  */
 public record Posting(String source, String company, String jobId, String title, String location, String url,
                       String jd, boolean locationVerified) {
+
+    public Posting {
+        title = title == null ? "" : title;
+        location = location == null ? "" : location;
+        url = url == null ? "" : url;
+        jd = jd == null ? "" : jd;
+    }
 }

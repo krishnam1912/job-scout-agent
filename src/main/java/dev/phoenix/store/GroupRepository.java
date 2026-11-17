@@ -7,7 +7,9 @@ import org.springframework.jdbc.support.KeyHolder;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GroupRepository {
 
@@ -39,6 +41,13 @@ public class GroupRepository {
                         + "('DISCOVERED','FILTERED_OUT','CANDIDATE')")
                 .param("g", groupId).query(Integer.class).single();
         return n > 0;
+    }
+
+    /** Ids of groups that have at least one member beyond candidate stage; their other members must not resurface. */
+    public Set<Long> engagedGroupIds() {
+        return new HashSet<>(jdbc.sql("SELECT DISTINCT group_id FROM jobs WHERE group_id IS NOT NULL AND state NOT IN "
+                        + "('DISCOVERED','FILTERED_OUT','CANDIDATE')")
+                .query(Long.class).list());
     }
 
     static byte[] encode(int[] signature) {

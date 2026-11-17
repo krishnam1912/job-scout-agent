@@ -1,0 +1,27 @@
+{
+  "_comment": "Synthetic filters for tests; same shape as templates/filters.example.json.",
+  "smartrecruiters_country": "in",
+  "amazon": {"country": "IND", "queries": ["sde backend", "sde platform"], "result_limit": 2, "max_results": 4},
+  "filters": {
+    "title_include": ["software engineer", "sde", "backend"],
+    "title_exclude": ["intern", "manager", "frontend"],
+    "locations": ["india", "bengaluru", "pune"],
+    "jd_include": ["java", "kotlin", "backend"],
+    "jd_exclude": ["pure frontend"],
+    "max_min_years": 6
+  },
+  "prescore": {
+    "stack": {"java": 12, "spring": 10, "kafka": 6},
+    "domain": {"payment": 5, "identity": 5},
+    "level_titles": {"sde ii": 12, "senior": 6},
+    "title_penalty": {"lead": 8, "full stack": 10},
+    "location_bonus": {"bengaluru": 8, "remote": 6},
+    "tier1": ["bigco"],
+    "tier2": ["midco"],
+    "tier1_bonus": 15,
+    "tier2_bonus": 8,
+    "years_ideal": [2, 5],
+    "years_bonus": 10,
+    "years_penalty_per_year_over": 8
+  }
+}
