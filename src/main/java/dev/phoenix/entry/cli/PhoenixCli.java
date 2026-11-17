@@ -36,14 +36,20 @@ public class PhoenixCli {
         CommandLine cli = new CommandLine(PhoenixCommand.class, this::create);
         cli.setOut(out);
         cli.setErr(err);
-        cli.getCommandSpec().exitCodeOnInvalidInput(EXIT_USER_ERROR);
-        cli.getCommandSpec().exitCodeOnExecutionException(EXIT_RUNTIME_ERROR);
+        exitCodes(cli);
+        cli.getSubcommands().values().forEach(PhoenixCli::exitCodes);
         cli.setExecutionExceptionHandler((e, commandLine, parseResult) -> handle(e, err));
         migrations.migrate();
         int exit = cli.execute(args);
         out.flush();
         err.flush();
         return exit;
+    }
+
+    /** picocli reads the exit codes from the command that failed, so each command needs them. */
+    private static void exitCodes(CommandLine command) {
+        command.getCommandSpec().exitCodeOnInvalidInput(EXIT_USER_ERROR);
+        command.getCommandSpec().exitCodeOnExecutionException(EXIT_RUNTIME_ERROR);
     }
 
     private int handle(Exception e, PrintWriter err) {
