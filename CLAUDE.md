@@ -18,7 +18,8 @@ A Claude Code job-search agent: it finds openings on public job boards, scores t
 | `src/`, `pom.xml`, `bin/phoenix`, `.mcp.json` | yes | The Java engine: state, lifecycle, dedupe, discovery, MCP server |
 | `templates/` | yes | Blank templates `/setup` copies from |
 | `playbooks/*.md` | yes | Per-ATS form notes (site mechanics only, no personal answers) |
-| `.claude/skills/` | yes | `/setup`, `/find-jobs`, `/apply-batch`, `/refer` |
+| `.claude/skills/` | yes | `/setup`, `/find-jobs`, `/apply-batch`, `/refer`, `/resume`, `/linkedin` |
+| `scripts/profile_score.py`, `scripts/skills_catalog.json` | yes | No-LLM keyword score of a resume / LinkedIn text vs. the job descriptions in the engine DB; your own skills go in `profile/skills.json` (template: `templates/skills.example.json`) |
 | `scripts/refer_candidates.py` | yes | No-LLM referral bookkeeping for `/refer` (follow-ups due, one candidate company per row, LinkedIn search-limit memory in `state/refer-state.json`) |
 | `profile/` | **no** | Your details, resume, preferences, filters, apply answers |
 | `data/`, `state/`, `queue/` | **no** | Leads, applications, log, status, seen IDs, daily queues |

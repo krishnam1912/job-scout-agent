@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy to profile/skills.json. Use skill names from scripts/skills_catalog.json. have = skills you've really used and can talk about; unconfirmed = maybe, ask before claiming; dont_claim = used lightly, never list. /resume and /linkedin read this.",
+  "have": [],
+  "unconfirmed": [],
+  "dont_claim": []
+}

@@ -57,14 +57,19 @@ Type these in a Claude Code session opened in this folder (or from the Claude ph
 | `apply 1,3,4` · `apply all ≥4` · `/apply-batch ≥80` | Fills and submits only the queued jobs you name | Yes, only those |
 | `/refer` · `/refer followups` · `/refer <company>` | Follow-ups due + alumni / ex-colleague referrers at companies you applied to; up to 5 drafts | No |
 | `send 1,3` · `send all` · `edit 2: <change>` · `skip 4` · `hold <name>` | Acts on the drafts `/refer` just showed | `send` only |
+| `/resume` · `/resume redo` · `/resume tailor <job id>` | Scores your resume against the jobs you scanned, checklist review, rewrite or per-job draft | No (drafts only) |
+| `/resume apply 1,3` | Applies those numbered resume changes (Overleaf or local file), recompiles, checks it's still one page | Yes, only those |
+| `/linkedin` · `/linkedin redo` | Reads your live profile, scores it, compares it with the resume, drafts headline / About / skills / Open to Work | No (drafts only) |
+| `/linkedin apply 1,3` | Applies those numbered profile edits with "notify network" off; never posts | Yes, only those |
 
 Plain scripts (no LLM, no tokens):
 ```bash
 python3 scripts/scan.py --dry-run --limit 5          # preview a scan
 python3 scripts/refer_candidates.py                  # who to follow up / which companies need a referrer
+python3 scripts/profile_score.py resume.tex          # resume / profile keyword coverage vs. scanned jobs
 bin/phoenix export                                   # refresh queue.md, applications.md, STATUS.md
 python3 scripts/check_private.py --all               # privacy check
-python3 -m unittest scripts/test_refer_candidates.py # referral script tests
+python3 -m unittest discover -s scripts -p 'test_*.py' # script tests
 ```
 
 ## Run it from your phone
@@ -79,7 +84,7 @@ Start runs, answer questions and approve applications or referral messages from 
 | `scripts/` Python scanner + job-board list · `src/` Java engine | `profile/` details, resume, preferences, filters, answers |
 | `templates/` blanks for `/setup` | `data/` leads, applications, log, status |
 | `playbooks/` how each job site's form behaves | `state/` seen job IDs · `queue/` daily shortlists |
-| `.claude/skills/` the four commands | `*.pdf`, `*.docx` |
+| `.claude/skills/` the six commands | `*.pdf`, `*.docx` |
 
 `scripts/check_private.py` runs before every commit (`/setup` installs it with `scripts/install-hooks.sh`). It blocks commits that include private folders, emails, phone numbers, LinkedIn/Overleaf URLs or anything in `profile/private-terms.txt`. Run it anytime with `python3 scripts/check_private.py --all`.
 

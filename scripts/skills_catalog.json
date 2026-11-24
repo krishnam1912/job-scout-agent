@@ -1,0 +1,291 @@
+{
+  "_comment": "Skills counted in job descriptions by scripts/profile_score.py. Aliases are whole-word, case-insensitive; a \"re:\" prefix means a case-sensitive regex. \"framing\" = generic words every JD uses: show them through real results in bullets, not as skills.",
+  "skills": {
+    "Java": [
+      "java",
+      "core java",
+      "j2ee"
+    ],
+    "Kotlin": [
+      "kotlin"
+    ],
+    "Go": [
+      "golang",
+      "go lang",
+      "re:(?<![A-Za-z])Go(?![A-Za-z-])"
+    ],
+    "Python": [
+      "python"
+    ],
+    "Scala": [
+      "scala"
+    ],
+    "C++": [
+      "c++"
+    ],
+    "Rust": [
+      "rust"
+    ],
+    "Node.js / TypeScript": [
+      "node.js",
+      "nodejs",
+      "typescript"
+    ],
+    "SQL": [
+      "sql"
+    ],
+    "Spring Boot": [
+      "spring boot",
+      "springboot",
+      "spring"
+    ],
+    "JPA / Hibernate": [
+      "jpa",
+      "hibernate"
+    ],
+    "REST APIs": [
+      "restful",
+      "rest api",
+      "rest service",
+      "rest-based",
+      "rest endpoint"
+    ],
+    "gRPC": [
+      "grpc"
+    ],
+    "GraphQL": [
+      "graphql"
+    ],
+    "Microservices": [
+      "microservice",
+      "micro-service",
+      "micro service",
+      "service-oriented",
+      "soa"
+    ],
+    "Distributed systems": [
+      "distributed system",
+      "distributed computing",
+      "distributed services"
+    ],
+    "Event-driven / messaging": [
+      "event-driven",
+      "event driven",
+      "message queue",
+      "messaging",
+      "pub/sub",
+      "pubsub"
+    ],
+    "Kafka": [
+      "kafka"
+    ],
+    "RabbitMQ / SQS": [
+      "rabbitmq",
+      "sqs",
+      "sns",
+      "kinesis",
+      "pulsar"
+    ],
+    "PostgreSQL": [
+      "postgresql",
+      "postgres"
+    ],
+    "MySQL": [
+      "mysql"
+    ],
+    "Redis / caching": [
+      "redis",
+      "memcached",
+      "caching",
+      "cache"
+    ],
+    "Elasticsearch": [
+      "elasticsearch",
+      "elastic search",
+      "opensearch"
+    ],
+    "MongoDB": [
+      "mongodb",
+      "mongo"
+    ],
+    "Cassandra / DynamoDB": [
+      "cassandra",
+      "dynamodb",
+      "scylla",
+      "hbase"
+    ],
+    "NoSQL": [
+      "nosql"
+    ],
+    "Spark / big data": [
+      "spark",
+      "hadoop",
+      "flink",
+      "hive",
+      "big data"
+    ],
+    "AWS": [
+      "aws",
+      "amazon web services",
+      "ec2",
+      "s3",
+      "lambda"
+    ],
+    "GCP": [
+      "gcp",
+      "google cloud"
+    ],
+    "Azure": [
+      "azure"
+    ],
+    "Docker": [
+      "docker",
+      "container",
+      "containerization"
+    ],
+    "Kubernetes": [
+      "kubernetes",
+      "k8s",
+      "eks",
+      "gke"
+    ],
+    "Terraform / IaC": [
+      "terraform",
+      "infrastructure as code",
+      "iac",
+      "cloudformation"
+    ],
+    "CI/CD": [
+      "ci/cd",
+      "ci cd",
+      "continuous integration",
+      "continuous delivery",
+      "continuous deployment",
+      "jenkins",
+      "github actions"
+    ],
+    "Linux": [
+      "linux",
+      "unix"
+    ],
+    "System design": [
+      "system design",
+      "systems design",
+      "architecture and design",
+      "design patterns",
+      "low-level design",
+      "high-level design"
+    ],
+    "Scalability / performance": [
+      "scalability",
+      "scalable",
+      "high-performance",
+      "high performance",
+      "low latency",
+      "low-latency",
+      "high throughput",
+      "high-throughput"
+    ],
+    "Concurrency / multithreading": [
+      "concurrency",
+      "multithreading",
+      "multi-threading",
+      "multi-threaded",
+      "multithreaded",
+      "concurrent"
+    ],
+    "Data structures & algorithms": [
+      "data structure",
+      "algorithm"
+    ],
+    "Observability": [
+      "observability",
+      "monitoring",
+      "prometheus",
+      "grafana",
+      "datadog",
+      "splunk",
+      "kibana",
+      "tracing",
+      "opentelemetry"
+    ],
+    "Auth / identity": [
+      "authentication",
+      "authorization",
+      "identity",
+      "iam",
+      "access management"
+    ],
+    "OAuth / JWT / SSO": [
+      "oauth",
+      "oauth2",
+      "jwt",
+      "sso",
+      "single sign-on",
+      "saml",
+      "openid",
+      "oidc"
+    ],
+    "Security": [
+      "security",
+      "secure coding",
+      "encryption"
+    ],
+    "Testing": [
+      "unit test",
+      "unit testing",
+      "junit",
+      "integration test",
+      "test-driven",
+      "tdd",
+      "mockito"
+    ],
+    "On-call / operations": [
+      "on-call",
+      "on call",
+      "oncall",
+      "operational excellence",
+      "incident"
+    ],
+    "Payments / fintech": [
+      "payment",
+      "payments",
+      "fintech",
+      "billing",
+      "ledger"
+    ],
+    "LLM / GenAI": [
+      "llm",
+      "llms",
+      "genai",
+      "gen ai",
+      "generative ai",
+      "large language model",
+      "ai agent",
+      "agentic",
+      "rag"
+    ],
+    "Machine learning": [
+      "machine learning",
+      "ml model",
+      "ml models",
+      "ml platform"
+    ],
+    "Mentoring / leadership": [
+      "mentor",
+      "mentoring",
+      "mentorship",
+      "technical leadership",
+      "lead a team"
+    ],
+    "Agile / Scrum": [
+      "agile",
+      "scrum"
+    ]
+  },
+  "framing": [
+    "Scalability / performance",
+    "Security",
+    "Mentoring / leadership"
+  ]
+}
