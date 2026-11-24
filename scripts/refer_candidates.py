@@ -3,8 +3,10 @@
 
 Reads the engine's exports/applications.md (run `bin/phoenix export` first) and the
 referral tracker CSV, and prints, as JSON, what the skill should work on:
-  - follow-ups due, connection requests to re-check, people on Hold
-  - companies with an application >= --min-fit and no referrer yet (one row per company)
+  - follow-ups due (one follow-up per person), connection requests to re-check, people on Hold,
+    people still silent after a follow-up
+  - companies with a live application (Applied / Oa / Interview) >= --min-fit, applied in the
+    last --max-age-days, and no outreach yet (one row per company)
   - whether LinkedIn people search is allowed (monthly limit) and today's send budget
 
 Paths (all under --home, default $PHOENIX_HOME or the current folder):
@@ -18,7 +20,7 @@ State flags (write state/refer-state.json and exit):
   state "aliases": {"oldname": "canonical", "prefix*": "canonical"} merges misnamed company rows
 
 Usage:
-  python3 scripts/refer_candidates.py [--home DIR] [--tracker FILE] [--min-fit 80] [--top 5]
+  python3 scripts/refer_candidates.py [--home DIR] [--tracker FILE] [--min-fit 80] [--top 5] [--max-age-days 30]
   python3 scripts/refer_candidates.py --limit-hit
   python3 scripts/refer_candidates.py --searched atlassian --found 2
 """
@@ -28,6 +30,7 @@ import datetime as dt
 import json
 import os
 import re
+import sys
 from pathlib import Path
 
 HOME = Path(os.environ.get("PHOENIX_HOME") or ".")
@@ -36,6 +39,9 @@ APPS = TRACKER = STATE = None  # set in main() from --home / --tracker
 DAILY_CAP = 10
 RESEARCH_AFTER_DAYS = 30  # re-search a company that had no referrers after this long
 ALIASES = {}  # loaded from state "aliases"
+# Status labels written by `bin/phoenix export` (LegacyStatusLabels).
+APPLIED_LABELS = {"applied", "oa", "interview", "rejected", "offer", "ghosted"}
+REFERRABLE_LABELS = {"applied", "oa", "interview"}  # a referral can still help
 
 
 def norm(company: str) -> str:
@@ -48,9 +54,13 @@ def norm(company: str) -> str:
 
 def load_state() -> dict:
     try:
-        return json.loads(STATE.read_text())
+        state = json.loads(STATE.read_text())
     except (FileNotFoundError, json.JSONDecodeError):
-        return {"search_limit_hit": None, "searched": {}, "covered": {}, "aliases": {}}
+        state = {}
+    state.setdefault("search_limit_hit", None)
+    for key in ("searched", "covered", "aliases"):
+        state.setdefault(key, {})
+    return state
 
 
 def save_state(state: dict) -> None:
@@ -64,14 +74,16 @@ def parse_date(text: str):
 
 
 def load_applications():
-    """One entry per job ID (first row wins), only rows with Status Applied/Oa."""
+    """One entry per job ID (first row wins), only rows where an application was submitted."""
+    if not APPS.exists():
+        sys.exit(f"{APPS} not found: run `bin/phoenix export` first (or pass --home).")
     jobs, seen = [], set()
     for line in APPS.read_text().splitlines():
         cells = [c.strip() for c in line.split("|")]
         if len(cells) < 9 or not cells[1].isdigit():
             continue
         _, _, date, company, role, job_id, fit, status = cells[:8]
-        if status.lower() not in ("applied", "oa") or job_id in seen:
+        if status.lower() not in APPLIED_LABELS or job_id in seen:
             continue
         seen.add(job_id)
         jobs.append({
@@ -88,19 +100,21 @@ def load_tracker():
         return list(csv.DictReader(f))
 
 
-def report(min_fit: int, top: int) -> dict:
+def report(min_fit: int, top: int, max_age_days: int) -> dict:
     today = dt.date.today()
     state = load_state()
     jobs = load_applications()
     tracker = load_tracker()
-    state.setdefault("covered", {})
 
-    follow_ups, recheck, hold, covered = [], [], [], set(state["covered"])
+    follow_ups, recheck, hold, silent, covered = [], [], [], [], set(state["covered"])
     sent_today = 0
     for row in tracker:
-        covered.add(norm(row.get("Company", "")))
-        sent = row.get("Message sent", "")
+        sent = row.get("Message sent", "").strip()
         referred = row.get("Referred?", "").strip().lower()
+        reached_out = sent.lower().startswith("yes") or "connection request" in sent.lower()
+        # A row only covers its company once someone was actually contacted (or is on Hold).
+        if reached_out or referred in ("pending", "hold", "yes", "referred"):
+            covered.add(norm(row.get("Company", "")))
         last_contact = parse_date(sent) or parse_date(row.get("Date", ""))
         if parse_date(sent) == today:
             sent_today += 1
@@ -119,12 +133,20 @@ def report(min_fit: int, top: int) -> dict:
             continue
         due = parse_date(row.get("Follow-up date", ""))
         rested = last_contact is None or (today - last_contact).days >= 5
-        if sent.lower().startswith("yes") and due and due <= today and rested:
+        if not (sent.lower().startswith("yes") and due and due <= today and rested):
+            continue
+        if "follow-up" in sent.lower():
+            silent.append(person)  # one follow-up only; don't chase further
+        else:
             follow_ups.append(person)
 
     by_company = {}
+    oldest = today - dt.timedelta(days=max_age_days)
     for job in jobs:
-        if job["fit"] < min_fit or job["company"] in covered:
+        if job["fit"] < min_fit or job["company"] in covered or job["status"].lower() not in REFERRABLE_LABELS:
+            continue
+        applied_on = parse_date(job["date"])
+        if applied_on and applied_on < oldest:
             continue
         searched = state["searched"].get(job["company"])
         if searched and searched["found"] == 0 and \
@@ -154,6 +176,7 @@ def report(min_fit: int, top: int) -> dict:
         "follow_ups_due": follow_ups,
         "connection_requests_to_recheck": recheck,
         "hold": hold,
+        "silent_after_follow_up": silent,
         "new_referrer_candidates": candidates[:top],
         "candidates_left_after_top": max(0, len(candidates) - top),
         "linkedin_search_allowed": search_allowed,
@@ -168,6 +191,8 @@ def main() -> None:
     ap.add_argument("--tracker", type=Path, help="referral tracker CSV (default <home>/data/referrals.csv)")
     ap.add_argument("--min-fit", type=int, default=80)
     ap.add_argument("--top", type=int, default=5)
+    ap.add_argument("--max-age-days", type=int, default=30,
+                    help="only suggest referrers for applications this recent (default 30)")
     ap.add_argument("--limit-hit", action="store_true")
     ap.add_argument("--searched")
     ap.add_argument("--found", type=int)
@@ -185,7 +210,6 @@ def main() -> None:
 
     if args.limit_hit or args.searched or args.covered:
         state = load_state()
-        state.setdefault("covered", {})
         today = str(dt.date.today())
         if args.limit_hit:
             state["search_limit_hit"] = today
@@ -199,7 +223,7 @@ def main() -> None:
         print(json.dumps(state, indent=2))
         return
 
-    print(json.dumps(report(args.min_fit, args.top), indent=2))
+    print(json.dumps(report(args.min_fit, args.top, args.max_age_days), indent=2))
 
 
 if __name__ == "__main__":

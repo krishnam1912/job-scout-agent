@@ -47,6 +47,26 @@ bin/phoenix export                     # leads.csv, applications.md, STATUS.md, 
 - **Safety:** nothing is submitted or sent without an approval record the user created in chat; `start_application` also refuses roles already applied to. Design: [docs/design/java-core-phase0.md](docs/design/java-core-phase0.md), channels: [docs/design/channels.md](docs/design/channels.md).
 - **Python fallback:** `scripts/scan.py` still works on its own (below).
 
+## Commands
+Type these in a Claude Code session opened in this folder (or from the Claude phone app over Remote Control).
+
+| Command | What it does | Sends or submits? |
+|---|---|---|
+| `/setup` | First-run onboarding: resume, LinkedIn, preferences, standard answers into `profile/` | No |
+| `/find-jobs` · `/find-jobs 5` · `/find-jobs <company>` · `/find-jobs discover` | Scans the boards, scores with your rubric, queues the good ones | No |
+| `apply 1,3,4` · `apply all ≥4` · `/apply-batch ≥80` | Fills and submits only the queued jobs you name | Yes, only those |
+| `/refer` · `/refer followups` · `/refer <company>` | Follow-ups due + alumni / ex-colleague referrers at companies you applied to; up to 5 drafts | No |
+| `send 1,3` · `send all` · `edit 2: <change>` · `skip 4` · `hold <name>` | Acts on the drafts `/refer` just showed | `send` only |
+
+Plain scripts (no LLM, no tokens):
+```bash
+python3 scripts/scan.py --dry-run --limit 5          # preview a scan
+python3 scripts/refer_candidates.py                  # who to follow up / which companies need a referrer
+bin/phoenix export                                   # refresh queue.md, applications.md, STATUS.md
+python3 scripts/check_private.py --all               # privacy check
+python3 -m unittest scripts/test_refer_candidates.py # referral script tests
+```
+
 ## Run it from your phone
 Start runs, answer questions and approve applications from the Claude mobile app or any browser. Use Chrome Remote Desktop for sign-ins and CAPTCHAs. Step-by-step: [docs/remote-control.md](docs/remote-control.md).
 
