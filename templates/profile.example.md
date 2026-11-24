@@ -12,6 +12,7 @@
 - Main stack:
 - Domains:
 - Education:
+- Referrers (schools / past companies to search for referrals):
 - Full-time experience (years, excluding internships):
 
 ## Don't claim

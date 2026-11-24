@@ -13,6 +13,10 @@ Your personal details never enter the repo: `/setup` asks for them on first run 
 /apply-batch you reply "apply 1,3,4" or type `/apply-batch ≥80` (one approval per batch)
              → Claude fills and submits only those forms
              → passwords, CAPTCHAs, sign-ins, unusual questions are skipped and listed for you
+
+/refer       scripts/refer_candidates.py picks follow-ups due + companies with no referrer yet
+             → Claude checks LinkedIn replies, finds alumni / ex-colleagues, drafts ≤ 5 messages
+             → sends only the ones you approve ("send 1,3")
 ```
 
 ## Quick start
@@ -52,7 +56,7 @@ Start runs, answer questions and approve applications from the Claude mobile app
 | `scripts/` Python scanner + job-board list · `src/` Java engine | `profile/` details, resume, preferences, filters, answers |
 | `templates/` blanks for `/setup` | `data/` leads, applications, log, status |
 | `playbooks/` how each job site's form behaves | `state/` seen job IDs · `queue/` daily shortlists |
-| `.claude/skills/` the three commands | `*.pdf`, `*.docx` |
+| `.claude/skills/` the four commands | `*.pdf`, `*.docx` |
 
 `scripts/check_private.py` runs before every commit (`/setup` installs it with `scripts/install-hooks.sh`). It blocks commits that include private folders, emails, phone numbers, LinkedIn/Overleaf URLs or anything in `profile/private-terms.txt`. Run it anytime with `python3 scripts/check_private.py --all`.
 
