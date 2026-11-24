@@ -68,7 +68,10 @@ python3 -m unittest scripts/test_refer_candidates.py # referral script tests
 ```
 
 ## Run it from your phone
-Start runs, answer questions and approve applications from the Claude mobile app or any browser. Use Chrome Remote Desktop for sign-ins and CAPTCHAs. Step-by-step: [docs/remote-control.md](docs/remote-control.md).
+Start runs, answer questions and approve applications or referral messages from the Claude mobile app or any browser. Step-by-step: [docs/remote-control.md](docs/remote-control.md).
+
+- **Remote Control (Claude app):** all you need to follow runs, answer questions and reply `apply 1,3` or `send 1,3` from your phone. Keep your computer awake with Chrome open, because that's where forms are filled and messages are sent.
+- **Chrome Remote Desktop: optional, and off by default.** You only need it to do sign-ins and CAPTCHAs yourself from your phone; the agent never types passwords or solves CAPTCHAs. Without it, those steps wait on a "waiting for laptop" list until you're at the computer. Once it's set up, set `Remote desktop: yes` in `profile/apply-kit.md`.
 
 ## What's tracked vs. private
 | Tracked in git | Local only (git-ignored) |

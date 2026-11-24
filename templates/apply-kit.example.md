@@ -14,3 +14,4 @@
 - Self-ID: Prefer not to say (unless set otherwise below)
 - Optional marketing consents: leave unticked
 - Email verification codes: ask each batch
+- Remote desktop: no (set to yes once Chrome Remote Desktop is set up; see docs/remote-control.md)
